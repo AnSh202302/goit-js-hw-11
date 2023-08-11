@@ -10,6 +10,13 @@ const ref = {
   gallery: document.querySelector('.gallery'),
   btnLoadMore: document.querySelector('.load-more'),
 };
+const notiflixOptions = {
+  width: '300px',
+  position: 'center-center',
+  borderRadius: '12px',
+  timeout: 2000,
+  cssAnimationStyle: 'zoom',
+};
 let isShow = 0;
 
 ref.form.addEventListener('submit', handlerSearchImg);
@@ -20,39 +27,44 @@ ref.btnLoadMore.classList.add('is-hidden');
 function handlerSearchImg(e) {
   e.preventDefault();
   ref.gallery.innerHTML = '';
+  ref.btnLoadMore.classList.add('is-hidden');
+
   pixabayApiInstance.page = 1;
   pixabayApiInstance.searchTerm = ref.form[0].value.trim();
+  isShow = 0;
+
   if (pixabayApiInstance.searchTerm === '') {
-    Notiflix.Notify.warning('Please, fill the main field');
+    Notiflix.Notify.warning('Please, fill the main field', notiflixOptions);
     return;
   }
-  //   isShow = 0;
   fenchGallery();
 }
 
 async function fenchGallery() {
   const response = await pixabayApiInstance.fetchImg();
-  const { hits, totalHits, total } = response;
+  const { hits, totalHits } = response;
   console.log(response);
   isShow += hits.length;
-  console.log(`Hooray! We found ${isShow} images.`);
+
+  if (!hits.length || isShow >= totalHits) {
+    ref.btnLoadMore.classList.add('is-hidden');
+    Notiflix.Notify.failure(
+      'Sorry, there are no images matching your search query. Please try again.'
+    );
+  } else if (isShow < totalHits) {
+    ref.btnLoadMore.classList.remove('is-hidden');
+    Notiflix.Notify.success(
+      `Hooray! We found ${totalHits} images.`,
+      notiflixOptions
+    );
+  }
   ref.gallery.insertAdjacentHTML('beforeend', createMarkup(hits));
   const lightbox = new SimpleLightbox('.gallery a', {
     captions: true,
     captionDelay: 250,
   });
   lightbox.refresh();
-  if (hits.length === 0 || isShow > totalHits) {
-    ref.btnLoadMore.classList.add('is-hidden');
-    Notiflix.Notify.failure(
-      'Sorry, there are no images matching your search query. Please try again.'
-    );
-    return;
-  } else if (isShow < total) {
-    ref.btnLoadMore.classList.remove('is-hidden');
-  }
 }
-
 function handlerBtnLoadMoreClick() {
   pixabayApiInstance.incrementPage();
   fenchGallery();

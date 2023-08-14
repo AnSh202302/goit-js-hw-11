@@ -10,6 +10,11 @@ const ref = {
   gallery: document.querySelector('.gallery'),
   btnLoadMore: document.querySelector('.load-more'),
 };
+const lightbox = new SimpleLightbox('.gallery a', {
+  captions: true,
+  captionDelay: 250,
+});
+
 const notiflixOptions = {
   width: '300px',
   position: 'center-center',
@@ -17,6 +22,7 @@ const notiflixOptions = {
   timeout: 2000,
   cssAnimationStyle: 'zoom',
 };
+
 let isShow = 0;
 
 ref.form.addEventListener('submit', handlerSearchImg);
@@ -27,6 +33,7 @@ ref.btnLoadMore.classList.add('is-hidden');
 function handlerSearchImg(e) {
   e.preventDefault();
   ref.gallery.innerHTML = '';
+
   ref.btnLoadMore.classList.add('is-hidden');
 
   pixabayApiInstance.page = 1;
@@ -43,9 +50,7 @@ function handlerSearchImg(e) {
 async function fenchGallery() {
   const response = await pixabayApiInstance.fetchImg();
   const { hits, totalHits } = response;
-  console.log(response);
   isShow += hits.length;
-
   if (!hits.length || isShow >= totalHits) {
     ref.btnLoadMore.classList.add('is-hidden');
     Notiflix.Notify.failure(
@@ -59,10 +64,6 @@ async function fenchGallery() {
     );
   }
   ref.gallery.insertAdjacentHTML('beforeend', createMarkup(hits));
-  const lightbox = new SimpleLightbox('.gallery a', {
-    captions: true,
-    captionDelay: 250,
-  });
   lightbox.refresh();
 }
 function handlerBtnLoadMoreClick() {
